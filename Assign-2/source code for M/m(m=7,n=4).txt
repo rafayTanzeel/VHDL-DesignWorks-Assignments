@@ -1,0 +1,70 @@
+library IEEE;
+
+use IEEE.std_logic_1164.all;
+use IEEE.std_logic_arith.all;
+
+entity M is
+   port(cs, r : in std_logic;
+        d1 : in std_logic_vector(11 downto 0);
+        addr : in std_logic_vector(8 downto 0);
+        d0 : out std_logic_vector(11 downto 0));
+end M;
+
+architecture behav of M is
+type RAM is array(0 to 511) of std_logic_vector(11 downto 0);
+type state is (M0, M1, M2);
+signal new_state : state;
+
+begin
+--state-transition process:
+   process is
+   variable curr_state : state := M0;
+   begin
+      if cs = '1' then
+      case curr_state is
+      when M0 =>
+         if cs = '1' and r = '0' then
+            curr_state := M1;
+         elsif cs = '1' and r = '1' then
+            curr_state := M2;
+         end if;
+      when M1 | M2 =>
+         if cs = '0' then curr_state := M0;
+         end if;
+      end case;
+      new_state <= curr_state;
+      end if;
+      wait for 20 ns;
+   end process;
+
+-- asserted outputs process
+   process is
+   variable posn : natural;
+   variable MEM : RAM;
+   variable dout_val : std_logic_vector(11 downto 0);
+   variable mfc_val : std_logic := '0';
+   begin
+   -- Stored Program
+      MEM(0) := X"838";      --m=7
+      MEM(1) := X"821";	     --n=4		
+      MEM(2) := X"642";		
+      MEM(3) := X"E28";		
+      MEM(4) := X"60A";		
+      MEM(5) := X"E08";		
+      MEM(6) := X"A00";
+      MEM(7) := X"000";
+      MEM(8) := X"A01";
+      MEM(9) := X"000";
+      posn := to_integer(addr);
+      dout_val := "ZZZZZZZZZZZZ";
+      wait for 20 ns;
+      case new_state is
+      when M0 =>
+      when M1 => 
+         MEM(posn) := d1;   -- store
+      when M2 => 
+         dout_val := MEM(posn);
+      end case;
+      d0 <= dout_val;
+   end process;
+end behav;

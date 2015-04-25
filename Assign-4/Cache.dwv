@@ -1,0 +1,60 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.std_logic_arith.all;
+
+entity Cache is
+   port(cs, r, clr : in std_logic;
+        data : in std_logic_vector(31 downto 0);
+        addr : in std_logic_vector(7 downto 0);
+        cline : out std_logic_vector(31 downto 0);
+	    ctag: out std_logic_vector(3 downto 0);
+	    v : out std_logic);
+end Cache;
+
+architecture behav of Cache is
+type RAM is array (0 to 15) of std_logic_vector(36 downto 0); 
+begin 
+	 process is
+	 variable M : RAM; 
+	 variable locn : natural; 
+	 variable temp_val : std_logic_vector(36 downto 0); 
+	 variable cline_val : std_logic_vector(31 downto 0);
+	 variable ctag_val : std_logic_vector(3 downto 0);
+	 variable v_val : std_logic;
+		begin
+		 
+			if cs = '1' then
+	 			locn := to_integer(addr(3 downto 0)); 
+				if r = '1' then 
+					temp_val := M(locn); 
+					cline_val := temp_val(31 downto 0);
+					ctag_val := temp_val(35 downto 32);
+					v_val := temp_val(36);
+					
+				else
+					temp_val(31 downto 0) := data;
+					temp_val(35 downto 32) := addr(7 downto 4);
+					temp_val(36) := '1';
+	 				M(locn) := temp_val;
+	 				v_val := 'Z'; 
+	 				ctag_val:= "ZZZZ"; 
+	 				cline_val:= "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ";
+				end if; 
+			end if; 
+	        if clr ='1' then
+	            locn := 0;
+	            while(locn<16) loop
+	                temp_val(35 downto 0) := X"000000000";
+	                temp_val(36) := '0';
+	                M(locn) := temp_val; 
+	                locn:=locn+1;
+	            end loop;
+	        end if;
+		cline <= cline_val; 
+		ctag <= ctag_val;
+		v <= v_val;
+		
+		wait on cs,r; 
+	end process;
+
+end behav;

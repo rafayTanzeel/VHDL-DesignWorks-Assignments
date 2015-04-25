@@ -1,0 +1,87 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.std_logic_arith.all;
+
+entity GCD is
+    port (clk,st: in std_logic;
+        d1, d2: in std_logic_vector(15 downto 0);
+        dout:out std_logic_vector(15 downto 0);
+        rdy: out std_logic
+    );
+end GCD;
+
+
+architecture behav of GCD is
+type state is (S0, S1, S2, S3, S4, S5, S6, S7);
+signal new_state:state;
+signal it, eq, eq1 : boolean;
+
+begin
+--State Transition Process
+process is
+variable current_state: state := S7;
+
+begin
+if clk='1' then
+    case current_state is
+        when S0=>
+            wait for 20 ns;
+            if st='1' then current_state:=S1;
+            end if;
+        when S1=>current_state:=S2;
+        when S2=>
+            if it then current_state:=S4;
+            elsif not (eq or it) then current_state:=S3;
+            elsif eq then current_state:=S7;
+            end if;
+        when S3=>current_state:=S4;
+        when S4=>current_state:=S5;
+        when S5=>
+            if eq1 then current_state:=S7;
+            else current_state:=S6;
+            end if;
+        when S6=>current_state:=S1;
+        when S7=>
+            if st='0' then current_state:=S0;
+            end if;
+    end case;
+    new_state<=current_state;
+    end if;
+    wait on clk;
+end process;
+    
+--asserted output
+process is
+variable M, N, dout_val, T: std_logic_vector(15 downto 0);
+variable eq_val, eq1_val, it_val : boolean;
+variable rdy_var: std_logic;
+begin   
+    case new_state is
+        when S0=>
+                M := d1; N := d2;
+                rdy_var:='0';
+        when S1=>
+            eq_val := M=N; 
+            it_val := to_integer(M) < to_integer(N);
+        when S3=>
+            T := M; 
+            M := N; 
+            N := T;
+        when S4=>
+            eq1_val := to_integer(M) = 1;
+        when S6=>
+            N:=N-M;
+        when S7=>      
+            rdy_var:='1';
+            dout_val:=M;
+    end case;
+    rdy<=rdy_var;
+    eq1<=eq1_val;
+    eq<=eq_val;
+    it<=it_val;
+    dout<=dout_val;
+    wait on new_state;
+    
+    end process;
+
+end behav;

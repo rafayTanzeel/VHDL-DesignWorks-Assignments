@@ -1,0 +1,141 @@
+library IEEE;
+
+use IEEE.std_logic_1164.all;
+use IEEE.std_logic_arith.all;
+
+entity calc is
+	port(   clk:in std_logic;
+			state:in std_logic_vector(3 downto 0);
+			d0 : in std_logic_vector(11 downto 0);
+			opc:out std_logic_vector(2 downto 0);
+			cs, r, req, eq, It: out std_logic;
+       		d1 : out std_logic_vector(11 downto 0);
+        	addr : out std_logic_vector(8 downto 0)
+	);
+end calc;
+
+
+architecture behav of calc is
+
+type InternalMemory is array (0 to 8) of std_logic_vector(11 downto 0);
+begin
+d1<="ZZZZZZZZZZZZ";
+
+process
+variable Re:InternalMemory;
+variable r_val:std_logic:='0';
+variable req_val: std_logic:='0';
+variable cs_val: std_logic:='0';
+variable addr_val, PC:std_logic_vector(8 downto 0);
+variable IR, d1_val:std_logic_vector(11 downto 0);
+variable eq_val, It_val:std_logic;
+variable opc_val,i,j,k:std_logic_vector(2 downto 0);
+variable i_index, j_index, k_index:natural;
+variable value, displ:std_logic_vector(5 downto 0);
+variable initialiseArr:boolean:=true;
+begin
+	if clk='1' then
+		wait for 2 ns;
+		case state is
+		when X"0"=>
+			req_val:='0';
+			wait for 2 ns;
+			if initialiseArr then
+				Re(0):="ZZZZZZZZZZZZ";
+				Re(1):="ZZZZZZZZZZZZ";
+				Re(2):="ZZZZZZZZZZZZ";
+				Re(3):="ZZZZZZZZZZZZ";
+				Re(4):="ZZZZZZZZZZZZ";
+				Re(5):="ZZZZZZZZZZZZ";
+				Re(6):="ZZZZZZZZZZZZ";
+				Re(7):="ZZZZZZZZZZZZ";
+				initialiseArr:=false;
+			end if;
+				d1_val:="ZZZZZZZZZZZZ";
+				PC:=X"00" & '0';
+		when X"1"=>
+				wait for 2 ns;
+				req_val:='0';
+				d1_val:="ZZZZZZZZZZZZ";
+				addr_val:=PC;
+				cs_val:='1';
+				r_val:='1';
+		when X"2"=>
+				cs_val:='0';
+				r_val:='0';
+				IR:=d0;
+				PC:=PC+1;
+		when X"3"=>
+				opc_val:=IR(11 downto 9);
+				i:=IR(8 downto 6);
+				j:=IR(5 downto 3);
+				k:=IR(2 downto 0);
+				value:=IR(8 downto 3);
+				displ:=IR(8 downto 3)-1;
+		when X"4"=>
+		wait for 2 ns;
+			if (Re(k_index)/="ZZZZZZZZZZZZ") then
+				if to_integer(Re(k_index))=1 then
+					eq_val:='1';
+				else 
+					eq_val:='0';
+				end if;
+				if to_integer(Re(k_index))=2 then
+					It_val:='1';
+				else
+					It_val:='0';
+				end if;
+			end if;
+			
+		when X"5"=>
+				k_index:=to_integer(k);
+				i_index:=to_integer(i);
+				j_index:=to_integer(j);
+				Re(k_index):=Re(i_index)+Re(j_index);
+		when X"6"=>
+				k_index:=to_integer(k);
+				i_index:=to_integer(i);
+				j_index:=to_integer(j);
+				Re(k_index):=Re(i_index)-Re(j_index);
+		when X"7"=>
+                k_index:=to_integer(k);
+                i_index:=to_integer(i);
+                j_index:=to_integer(j);
+                if  to_integer(Re(i_index))<to_integer(Re(j_index)) and Re(i_index)=Re(j_index) then
+                    Re(k_index):="000000000011";
+                end if;
+                if Re(i_index)=Re(j_index) and not(to_integer(Re(i_index))<to_integer(Re(j_index))) then
+                    Re(k_index):="000000000001";
+                end if;
+                if to_integer(Re(i_index))<to_integer(Re(j_index)) and not(Re(i_index)=Re(j_index))then
+                    Re(k_index):="000000000010";
+                 end if;	
+                if  not(to_integer(Re(i_index))<to_integer(Re(j_index))) and not(Re(i_index)=Re(j_index)) then
+                    Re(k_index):="000000000000";
+                end if;
+		when X"8"=>
+				k_index:=to_integer(k);
+				Re(k_index):=("00" & X"0" & value);
+		when X"9"=>
+				k_index:=to_integer(k);
+				req_val:='1';
+				d1_val:=Re(k_index);
+		when X"A"=>
+		when X"B"=>
+		when X"C"=>
+			PC:=PC+displ;
+		when X"D"=>
+		end case;
+	end if;
+	
+	addr<=addr_val;
+	cs<=cs_val;
+	opc<=opc_val;
+	eq<=eq_val;
+	It<=It_val;
+	req<=req_val;
+	r<=r_val;
+	d1<=d1_val;
+	wait on state;
+end process;
+end behav;

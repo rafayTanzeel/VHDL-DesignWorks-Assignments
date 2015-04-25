@@ -1,0 +1,38 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.std_logic_arith.all;
+
+
+
+entity CPE is
+port(state : in std_logic_vector(3 downto 0);
+        cs, r, req, lir, s1, s2, lr, clp, lp, up, c0 : out std_logic;
+        sel: out std_logic_vector(2 downto 0)
+        );
+end CPE;
+
+architecture behav of CPE is
+type ROM is array(0 to 13) of std_logic_vector(13 downto 0);
+begin
+    process is
+            variable CTL_MEM:ROM:=("00010000000000", "00000000000110", "10000100000000", "00000000000000","00000000000000", "00100010101000","00100011011000","00100010111000","00100000101000","01000000000001","00000000000000","01000000110000","00001000000000","00000000000000");
+            variable addr:natural;
+            variable out_vec:std_logic_vector(13 downto 0);
+    begin
+         addr:=to_integer(state);
+         out_vec:=CTL_MEM(addr);
+         req<=out_vec(0);
+         r<=out_vec(1);
+         cs<=out_vec(2);         
+         sel<=out_vec(5 downto 3);
+         c0<=out_vec(6);
+         s2<=out_vec(7);
+         up<=out_vec(8);
+         lp<=out_vec(9);
+         clp<=out_vec(10);
+         lr<=out_vec(11);
+         s1<=out_vec(12);
+         lir<=out_vec(13);
+         wait on state;
+    end process;
+end behav;

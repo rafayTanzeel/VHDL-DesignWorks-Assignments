@@ -1,0 +1,87 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.std_logic_arith.all;
+
+entity SEQ2 is
+port(clk, st, eq, lt, rdy : in std_logic;
+    opc : in std_logic_vector(2 downto 0);
+    state : out std_logic_vector(3 downto 0));
+end SEQ2;
+
+architecture behav of SEQ2 is
+begin
+process
+variable curr_state:std_logic_vector(3 downto 0):=X"D";
+variable lt_val,eq_val:std_logic;
+
+begin
+    if clk='1' then
+        case curr_state is
+        when X"0"=>
+            if st='1' then
+                curr_state:=X"1";
+            end if;
+        when X"1"=>
+            curr_state:=X"2";
+        when X"2"=>
+            curr_state:=X"3";
+        when X"3"=>
+            curr_state:=X"4";
+        when X"4"=>
+            case opc is
+                when "000"=>
+                    curr_state:=X"D";
+                when "001"=>
+                    curr_state:=X"5";
+                when "010"=>
+                    curr_state:=X"6";
+                when "011"=>
+                    curr_state:=X"7";
+                when"100"=>       
+                    curr_state:=X"8";
+                when"101"=>        
+                    curr_state:=X"9";
+                when "110"=>         
+                    curr_state:=X"A";
+                when "111"=>         
+                    curr_state:=X"B";
+            end case;
+        when X"5"=>
+                curr_state:=X"1";
+        when X"6"=>
+                curr_state:=X"1";
+        when X"7"=>
+                wait for 2 ns;
+                curr_state:=X"1";
+        when X"8"=>
+                curr_state:=X"1";
+        when X"9"=>
+            wait until rdy='1';
+            curr_state:=X"1";
+        when X"A"=>
+            eq_val:=eq;
+            if eq_val='1' then
+                curr_state:=X"C";
+            else
+                curr_state:=X"1";
+            end if;
+        when X"B"=>
+            if lt='1' then
+                curr_state:=X"C";
+            else 
+                curr_state:=X"1";
+            end if;
+        when X"C"=>
+            curr_state:=X"1";
+        when X"D"=>
+            if st='0' then
+                curr_state:=X"0";
+            end if;
+        end case;
+    end if;
+    state<=curr_state;
+    wait for 10 ns;
+    wait on clk;
+
+end process;
+end behav;

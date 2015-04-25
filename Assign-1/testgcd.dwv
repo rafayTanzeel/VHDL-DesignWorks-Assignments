@@ -1,0 +1,61 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.std_logic_arith.all;
+use work.all;
+
+entity Test_GCD is
+end Test_GCD;
+
+architecture test_bench of Test_GCD is
+signal clk, st, rdy: std_logic; 
+signal d1, d2, dout: std_logic_vector(15 downto 0);
+begin
+GCD_Entity:GCD
+port map(clk=>clk, d1=>d1, d2=>d2, dout=>dout, st=>st, rdy=>rdy);
+
+process is
+begin   st<='1';
+        wait for 50 ns;
+  		st<='0';d1<="0000000000001001"; d2<="0000000000001111";
+     	wait for 50 ns;
+	    st<='1'; wait until rdy ='1';
+	    wait for 50 ns;
+	    d1<="0000000000001111"; d2<="0000000000001001";
+	    st<='0';
+	    wait for 50 ns;
+	    st<='1';wait until rdy ='1';
+	    wait for 50 ns;
+	    d1<="0000000000001111"; d2<="0000000000001110";
+	    st<='0';
+	    wait for 50 ns;
+	    st<='1';wait until rdy ='1';
+	    wait for 50 ns;
+	    d1<="0000000000010010"; d2<="0000000000100100";
+		st<='0';
+		wait for 50 ns;
+	    st<='1';wait until rdy ='1';
+	    wait for 50 ns;
+        d1<="0000000001011011"; d2<="0000000000100111";
+  		st<='0';
+	    wait for 50 ns;
+	    st<='1';wait until rdy ='1';
+	    wait for 50 ns;
+        d1<="0000000001111111"; d2<="0000000001111111";
+  		st<='0';
+     	wait for 50 ns;
+     	st<='1';wait until rdy ='1';
+        wait;
+
+end process;
+
+
+    
+--Clock Process
+    process is 
+    begin
+        clk<='1';
+        clk<='0' after 10 ns;
+        wait for 20 ns;
+    end process;
+    
+end test_bench;
